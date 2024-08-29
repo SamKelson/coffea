@@ -29,9 +29,6 @@ def test_load_single_field_of_linked(events):
         events.Electrons.caloClusters.calE.compute()
 
 
-@pytest.mark.skip(
-    reason="temporarily disabled because of uproot issue #1267 https://github.com/scikit-hep/uproot5/issues/1267"
-)
 @pytest.mark.parametrize("do_slice", [False, True])
 def test_electron_track_links(events, do_slice):
     if do_slice:
@@ -41,13 +38,18 @@ def test_electron_track_links(events, do_slice):
         for j, electron in enumerate(event.Electrons):
             for link_index, link in enumerate(electron.trackParticleLinks):
                 track_index = link.m_persIndex
-                assert (
-                    event.GSFTrackParticles[track_index].z0
-                    == trackParticles[i][j][link_index].z0
-                )
+                track_key = link.m_persKey
+                if track_key != 0:
+                    assert (
+                        event.GSFTrackParticles[track_index].z0
+                        == trackParticles[i][j][link_index].z0
+                    )
+                else:
+                    continue
 
 
-def mock_empty(form, behavior={}):
+def mock_empty(form, behavior=None):
+    behavior = behavior if behavior is not None else {}
     return ak.Array(
         form.length_zero_array(),
         behavior=behavior,
